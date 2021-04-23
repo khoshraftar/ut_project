@@ -14,13 +14,11 @@ for row in df.iterrows():
         monthly_prices[date_parsed[0] - 2015][date_parsed[1] - 1] = row[1][8]
         flatten_monthly_prices.append([row[1][0], row[1][8]])
 
-normalized_flatten_prices = [[flatten_monthly_prices[0][0], 0]]
-# normalize
-for x in range(1, len(flatten_monthly_prices)):
-    normalized_flatten_prices.append([
-        flatten_monthly_prices[x][0],
-        (flatten_monthly_prices[x][1] - flatten_monthly_prices[x - 1][1]) / flatten_monthly_prices[x-1][1]]
-    )
-print(normalized_flatten_prices)
-for item in normalized_flatten_prices:
-    print(item)
+
+x = [x[0] for x in flatten_monthly_prices]
+y = [y[1] for y in flatten_monthly_prices]
+
+import matplotlib.pyplot as plt
+plt.scatter(x,y)
+plt.scatter(x,[0 for _ in x])
+plt.show()
