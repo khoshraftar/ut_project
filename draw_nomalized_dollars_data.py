@@ -14,4 +14,5 @@ for i in range(1, len(dollar_data_y)):
     nomalized_data_y.append((dollar_data_y[i]-dollar_data_y[i-1])/dollar_data_y[i-1])
 plt.scatter(dollar_data_x, [0 for _ in dollar_data_x])
 plt.scatter(dollar_data_x, nomalized_data_y)
+plt.grid()
 plt.show()

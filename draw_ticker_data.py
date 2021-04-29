@@ -21,4 +21,5 @@ y = [y[1] for y in flatten_monthly_prices]
 import matplotlib.pyplot as plt
 plt.scatter(x,y)
 plt.scatter(x,[0 for _ in x])
+plt.grid()
 plt.show()
