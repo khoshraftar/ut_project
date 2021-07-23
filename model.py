@@ -2,10 +2,13 @@ import sys
 from math import sqrt
 from random import randint
 
+import numpy
 import pandas as pd
 from matplotlib import pyplot
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
 from sklearn.metrics import mean_squared_error
+from statsmodels.tsa.stattools import adfuller, acf, pacf
 
 
 def parse_date(df):
@@ -65,6 +68,11 @@ def get_cash_dataframe():
     return parse_date(df)
 
 
+def draw_series(values):
+    pyplot.plot(values)
+    pyplot.show()
+
+
 ticker_values = get_ticker_dataframe().values
 dollar_values = get_dollar_dataframe().values
 inflation_values = get_inflation_dataframe().values
@@ -72,18 +80,51 @@ cash_values = get_cash_dataframe().values
 index = get_ticker_dataframe().index
 combined_values = []
 for i in range(len(ticker_values)):
-    combined_values.append(2*ticker_values[i] - 2*dollar_values[i] + 1*inflation_values[i] - 0*cash_values[i])
+    a = float(0.5 * dollar_values[i] + 0.5 * inflation_values[i] - 0 * cash_values[i])
+    combined_values.append(a)
 
-size = int(len(combined_values) * 0.66)
-train, test = combined_values[0:size], combined_values[size:len(combined_values)]
+
+size = int(len(ticker_values) * 0.66)
+train, test = ticker_values[0:size], ticker_values[size:len(ticker_values)]
+
+
+# stationary test
+draw_series(values=ticker_values)
+result = adfuller(ticker_values)
+print('p-value: %f' % result[1])
+# 1st order differencing
+draw_series(get_ticker_dataframe().diff().values)
+result = adfuller(get_ticker_dataframe().diff().dropna().values)
+print('p-value: %f' % result[1])
+
+# ACF and PACF
+plot_acf(pd.DataFrame(train), lags=22)
+pyplot.show()
+#
+plot_pacf(pd.DataFrame(train), lags=22)
+pyplot.show()
+
+
+# def get_pdq(time_series):
+#     plot_acf(time_series)
+#     plot_pacf(time_series)
+#     pyplot.show()
+#
+#     r,rac,Q = acf(time_series, qstat=True , nlags=34)
+#     prac = pacf(time_series,method='ywmle', nlags= 34)
+#     table_data = numpy.c_[range(1,len(r)), r[1:],rac,prac[1:len(rac)+1],Q]
+#     table = pd.DataFrame(table_data, columns=['lag', "AC","Q", "PAC", "Prob(>Q)"])
+#     print(table)
+#
+# get_pdq(pd.DataFrame(combined_values))
 
 history = [x for x in train]
 predictions = list()
 # walk-forward validation
 for t in range(len(test)):
-    model = ARIMA(history, order=(2, 0, 0))
+    model = ARIMA(history, order=(2, 0, 2), exog=combined_values[:len(history)])
     model_fit = model.fit()
-    output = model_fit.forecast()
+    output = model_fit.forecast(exog=combined_values[len(history)])
     yhat = output[0]
     predictions.append(yhat)
     obs = test[t]
