@@ -1,3 +1,4 @@
+import datetime
 import sys
 
 import pandas as pd
@@ -24,11 +25,11 @@ for x in range(1, len(flatten_monthly_prices)):
 for item in normalized_flatten_prices:
     print(item)
 
-x = [x[0] for x in normalized_flatten_prices]
+x = [datetime.datetime.strptime(x[0], "%Y-%m-%d") for x in normalized_flatten_prices]
 y = [y[1] for y in normalized_flatten_prices]
 
 import matplotlib.pyplot as plt
-plt.scatter(x,y)
-plt.scatter(x,[0 for _ in x])
+plt.plot(x, y)
+plt.title("foolad change percentage")
 plt.grid()
 plt.show()

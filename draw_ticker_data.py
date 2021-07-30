@@ -1,3 +1,4 @@
+import datetime
 import sys
 
 import pandas as pd
@@ -15,11 +16,11 @@ for row in df.iterrows():
         flatten_monthly_prices.append([row[1][0], row[1][8]])
 
 
-x = [x[0] for x in flatten_monthly_prices]
+x = [datetime.datetime.strptime(x[0], "%Y-%m-%d") for x in flatten_monthly_prices]
 y = [y[1] for y in flatten_monthly_prices]
 
 import matplotlib.pyplot as plt
-plt.scatter(x,y)
-plt.scatter(x,[0 for _ in x])
+plt.plot(x,y)
+plt.title("Akhaber price")
 plt.grid()
 plt.show()

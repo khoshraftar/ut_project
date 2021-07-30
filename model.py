@@ -1,14 +1,14 @@
 import sys
+from datetime import datetime
 from math import sqrt
-from random import randint
 
-import numpy
 import pandas as pd
+from dateutil.relativedelta import relativedelta
 from matplotlib import pyplot
+from sklearn.metrics import mean_squared_error
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
-from sklearn.metrics import mean_squared_error
-from statsmodels.tsa.stattools import adfuller, acf, pacf
+from statsmodels.tsa.stattools import adfuller
 
 
 def parse_date(df):
@@ -83,11 +83,15 @@ for i in range(len(ticker_values)):
     a = float(0.5 * dollar_values[i] + 0.5 * inflation_values[i] - 0 * cash_values[i])
     combined_values.append(a)
 
+x = []
+dt = datetime(2015, 1, 1)
+while dt < datetime(2021, 1, 1):
+    x.append(dt)
+    dt += relativedelta(months=1)
 
 size = int(len(ticker_values) * 0.66)
 train, test = ticker_values[0:size], ticker_values[size:len(ticker_values)]
-
-
+x_train, x_test = x[0:size], x[size:len(ticker_values)]
 # stationary test
 draw_series(values=ticker_values)
 result = adfuller(ticker_values)
@@ -103,7 +107,6 @@ pyplot.show()
 #
 plot_pacf(pd.DataFrame(train), lags=22)
 pyplot.show()
-
 
 # def get_pdq(time_series):
 #     plot_acf(time_series)
@@ -122,7 +125,7 @@ history = [x for x in train]
 predictions = list()
 # walk-forward validation
 for t in range(len(test)):
-    model = ARIMA(history, order=(2, 0, 2), exog=combined_values[:len(history)])
+    model = ARIMA(history, order=(3, 1, 3), exog=combined_values[:len(history)])
     model_fit = model.fit()
     output = model_fit.forecast(exog=combined_values[len(history)])
     yhat = output[0]
@@ -131,9 +134,10 @@ for t in range(len(test)):
     history.append(obs)
     print('predicted=%f, expected=%f' % (yhat, obs))
 # evaluate forecasts
-rmse = sqrt(mean_squared_error(test, predictions)*0.66)
+rmse = sqrt(mean_squared_error(test, predictions) * 0.66)
 print('Test RMSE: %.3f' % rmse)
 # plot forecasts against actual outcomes
-pyplot.plot(test)
-pyplot.plot(predictions, color='red')
+pyplot.plot(x_test, test, label="test")
+pyplot.plot(x_test, predictions, color='red', label="prediction")
+pyplot.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 pyplot.show()
